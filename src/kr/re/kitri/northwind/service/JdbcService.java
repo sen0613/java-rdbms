@@ -1,6 +1,7 @@
 package kr.re.kitri.northwind.service;
 
 import kr.re.kitri.northwind.model.Customer;
+import kr.re.kitri.northwind.util.PostgresConstants;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -11,39 +12,68 @@ import java.util.List;
  */
 public class JdbcService {
 
-    public List<Customer> makeList(String url, String name, String password) {
+    public final String QUERY =
+            "select customerid, " +
+                    "       companyname, " +
+                    "       contactname, " +
+                    "       address, " +
+                    "       city, " +
+                    "       phone " +
+                    "from customers " +
+                    "order by contactname";
+
+    public List<Customer> makeList() {
         List<Customer> list = new ArrayList<>();
-        String query =
-                "select customerid, " +
-                        "       companyname, " +
-                        "       contactname, " +
-                        "       address, " +
-                        "       city, " +
-                        "       phone " +
-                        "from customers " +
-                        "order by contactname";
+
+        Connection conn = this.getConnection();
+        if (conn != null) {
+
+            try {
+                PreparedStatement pstmt = conn.prepareStatement(QUERY);
+                ResultSet rs = pstmt.executeQuery();
+
+                populateCustomer(rs, list);
+
+                conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return list;
+    }
+
+    private void populateCustomer(ResultSet rs, List<Customer> list) throws SQLException {
+
+        Customer cust;
+        while (rs.next()) {
+            cust = new Customer();
+            cust.setCustomerid(rs.getString(1));
+            cust.setCompanyname(rs.getString(2));
+            cust.setContactname(rs.getString(3));
+            cust.setAddress(rs.getString(4));
+            cust.setCity(rs.getString(5));
+            cust.setPhone(rs.getString(6));
+
+            list.add(cust);
+
+        }
+
+    }
+    private Connection getConnection(){
+
         try {
             Connection conn =
-                    DriverManager.getConnection(url, name, password);
-
-            PreparedStatement pstmt = conn.prepareStatement(query);
-            ResultSet rs = pstmt.executeQuery();
-
-            while (rs.next()) {
-                Customer ct = new Customer(
-                        rs.getString(1), rs.getString(2), rs.getString(3),
-                        rs.getString(4), rs.getString(5), rs.getString(6));
-                list.add(ct);
-            }
-
-            conn.close();
-            System.out.println("connection closed..");
-
+                    DriverManager.getConnection(
+                            PostgresConstants.DB_URL,
+                            PostgresConstants.USERNAME,
+                            PostgresConstants.PASSWORD
+                    );
+            return conn;
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
 
-        return list;
+        return null;
     }
 }

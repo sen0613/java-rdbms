@@ -2,7 +2,9 @@ package kr.re.kitri.northwind;
 
 import kr.re.kitri.northwind.model.Customer;
 import kr.re.kitri.northwind.service.JdbcService;
+import kr.re.kitri.northwind.util.PostgresConstants;
 
+import javax.annotation.PostConstruct;
 import java.util.List;
 
 /**
@@ -17,23 +19,25 @@ public class JdbcFinalDemo {
 
     public static void main(String[] args) {
 
-        loadDriver(DRIVER_POSTGRES);
-        JdbcService service = new JdbcService();
-        List<Customer> list2 = service.makeList(DB_URL, USERNAME, PASSWORD);
+        loadDriver(PostgresConstants.DRIVER_POSTGRES);
 
-        for(Customer e: list2) {
-            System.out.printf("%s\t%s\t%s\t%s\t%s\t%s\n", e.getCustomerid(), e.getCompanyname(),
-                    e.getContactname(), e.getAddress(),e.getCity(), e.getPhone());
+        JdbcService service = new JdbcService();
+        List<Customer> list = service.makeList();
+
+        if (list.size() > 0) {
+            list.forEach(System.out::println);
+        } else {
+            System.out.println("데이터가 없습니다.");
         }
     }
 
-    private static void loadDriver (String driverPostgres) {
+    private static void loadDriver(String driverPostgres) {
         try {
-            Class.forName(DRIVER_POSTGRES);
-            System.out.println("driver loading ok..");
+            Class.forName(driverPostgres);
+            System.out.println("driver ok..");
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
-
     }
+
 }
